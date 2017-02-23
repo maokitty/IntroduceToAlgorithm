@@ -51,5 +51,5 @@ class Peek(object):
 
 if __name__ == '__main__':
 	peek = Peek();
-	index=peek.findPeakElement2(range(1000000))
+	index=peek.findPeakElement1(range(1000000,0,-1))
 	print(index)
