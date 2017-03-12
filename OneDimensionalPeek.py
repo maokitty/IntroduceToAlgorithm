@@ -20,6 +20,27 @@ class Peek(object):
 						return index
 			elif peek > nums[index+1]:
 				return index
+	
+	def findPeakElement1Optimization(self,nums):
+		for i in range(1,len(nums)):
+			if nums[i] < nums[i-1]:
+				return i-1
+		return len(nums)-1
+
+	def findPeakElement2Optimization(self,nums):
+		return self.findOptimization(0,len(nums)-1,nums)
+
+	def findOptimization(self,start,end,nums):
+		if start == end :
+			return start
+		midNum = (int)((start+end)/2)
+		midNumNext = midNum+1
+		if nums[midNumNext] < nums[midNum]:
+			return self.findOptimization(start,midNum,nums)
+		else:
+			return self.findOptimization(midNumNext,end,nums)
+
+
 
 	def findPeakElement2(self,nums):
 		numsLen = len(nums)
@@ -51,5 +72,5 @@ class Peek(object):
 
 if __name__ == '__main__':
 	peek = Peek();
-	index=peek.findPeakElement1(range(1000000,0,-1))
+	index=peek.findPeakElement2Optimization([1,2,3,1])
 	print(index)
