@@ -1,10 +1,10 @@
 import sys
 import math
-# 数据结构选错出现问题
+# 数据结构选错,语法不熟悉出现问题
 class Docdis(object):
 	def __init__(self):
-		self.file_1 = "txtFile/javawikipage.txt"
-		self.file_2="txtFile/pythonwikipage.txt"
+		self.file_1 = "../txtFile/javawikipage.txt"
+		self.file_2="../txtFile/pythonwikipage.txt"
 
 	def readFile(self,filename):
 		try:

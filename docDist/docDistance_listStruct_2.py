@@ -1,8 +1,8 @@
 import math
 class DocDistance(object):
 	def __init__(self):
-		self.file_1 = "txtFile/javawikipage.txt"
-		self.file_2="txtFile/pythonwikipage.txt"
+		self.file_1 = "../txtFile/javawikipage.txt"
+		self.file_2="../txtFile/pythonwikipage.txt"
 
 	def read_file(self,filename):
 		try:
@@ -14,21 +14,25 @@ class DocDistance(object):
 	def word_split_file(self,records):
 		words=[]
 		for line in records:
-			character_list=[]
-			for character in line:
-				if character.isalnum():
-					character_list.append(character)
-				elif len(character_list)>0:
-					word="".join(character_list)
-					word=word.lower()
-					# words.append(word) #append可以是任何类型
-					words.extend(word) #extend接受一个参数，这个参数总是list 比append要快
-					character_list=[]
-			if len(character_list)>0:
+			word_inline = self.get_words_inline(line)
+			words.extend(word_inline)#extend接受一个参数，这个参数总是list 比append要快,如果是string会被拆开成单个
+		return words
+
+	def get_words_inline(self,line):
+		words=[]
+		character_list=[]
+		for character in line:
+			if character.isalnum():
+				character_list.append(character)
+			elif len(character_list)>0:
 				word="".join(character_list)
 				word=word.lower()
-				words.extend(word)
-				# words.append(word)
+				words.append(word) #append可以是任何类型
+				character_list=[]
+		if len(character_list)>0:
+			word="".join(character_list)
+			word=word.lower()
+			words.append(word)
 		return words
 
 	def count_frequency(self,words):
@@ -105,3 +109,42 @@ if __name__ == '__main__':
 #         2    0.000    0.000    0.001    0.001 docDistance_listStruct.py:7(read_file)
 #         1    0.000    0.000    2.099    2.099 profile:0(docDist.distance())
 #         0    0.000             0.000          profile:0(profiler)
+
+# 使用extend拆分单行和所有行的代码
+# 0.803896
+#          276003 function calls in 1.866 seconds
+
+#    Ordered by: standard name
+
+#    ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+#         1    0.000    0.000    0.000    0.000 :0(acos)
+#    107145    0.111    0.000    0.111    0.000 :0(append)
+#         1    0.000    0.000    1.865    1.865 :0(exec)
+#       863    0.001    0.000    0.001    0.000 :0(extend)
+#    108885    0.112    0.000    0.112    0.000 :0(isalnum)
+#     17180    0.019    0.000    0.019    0.000 :0(join)
+#     23820    0.024    0.000    0.024    0.000 :0(len)
+#     17180    0.018    0.000    0.018    0.000 :0(lower)
+#         2    0.000    0.000    0.000    0.000 :0(nl_langinfo)
+#         2    0.000    0.000    0.000    0.000 :0(open)
+#         1    0.000    0.000    0.000    0.000 :0(print)
+#         2    0.001    0.000    0.001    0.000 :0(readlines)
+#         1    0.001    0.001    0.001    0.001 :0(setprofile)
+#         1    0.000    0.000    0.000    0.000 :0(sqrt)
+#        18    0.000    0.000    0.000    0.000 :0(utf_8_decode)
+#         1    0.000    0.000    1.865    1.865 <string>:1(<module>)
+#         2    0.000    0.000    0.000    0.000 _bootlocale.py:23(getpreferredencoding)
+#         2    0.000    0.000    0.000    0.000 codecs.py:257(__init__)
+#         2    0.000    0.000    0.000    0.000 codecs.py:306(__init__)
+#        18    0.000    0.000    0.000    0.000 codecs.py:316(decode)
+#         2    0.003    0.001    0.580    0.290 docDistance_listStruct_2.py:14(word_split_file)
+#       863    0.296    0.000    0.576    0.001 docDistance_listStruct_2.py:21(get_words_inline)
+#         2    0.623    0.312    0.628    0.314 docDistance_listStruct_2.py:40(count_frequency)
+#         2    0.000    0.000    1.209    0.604 docDistance_listStruct_2.py:53(word_frequence)
+#         3    0.655    0.218    0.655    0.218 docDistance_listStruct_2.py:59(inner_product)
+#         1    0.000    0.000    1.865    1.865 docDistance_listStruct_2.py:68(distance)
+#         2    0.000    0.000    0.001    0.000 docDistance_listStruct_2.py:7(read_file)
+#         1    0.000    0.000    1.866    1.866 profile:0(docDist.distance())
+#         0    0.000             0.000          profile:0(profiler)
+
+
