@@ -125,37 +125,67 @@ class BST(object):
 			# python3 语法输出不换行
 			print(x.key,end=',')
 			self.inorderTreeWalk(x.right)
+# 打印的方法
+	# 1:先序遍历
+	# 2:如果子节点不存在，那么所有子节点的打印空格数和父节点的长度保持一致
+	# 3:左右节点只要有一个不存在，就不显示斜杠
 	def __str__(self):
-		if self.root is None: return '<empty tree>'
+		if self.root == None:
+			print("<empty tree>")
 		def recurse(node):
-			if node is None: return [], 0, 0
-			# 前序遍历
-			label = str(node.key)
-			left_lines, left_pos, left_width = recurse(node.left)
-			right_lines, right_pos, right_width = recurse(node.right)
-			middle = max(right_pos + left_width - left_pos + 1, len(label), 2)
-			pos = left_pos + middle // 2
-			width = left_pos + middle + right_width - right_pos
-			while len(left_lines) < len(right_lines):
-				left_lines.append(' ' * left_width)
+			if node is None: 
+				return [], 0 ,0
+			key = str(node.key)
+			left_lines ,left_num_pos, left_total_width=recurse(node.left)
+			right_lines ,right_num_pos ,right_total_width=recurse(node.right)
+			
+			# 如果存在子元素 left_total_width - left_num_pos + right_num_pos + 1  加1保证两个子树之间最少存在一个空格，同事斜杠之间和数字的距离能反馈出这个加1
+			# 对于倒数第一层和第二层，倒数第一层不存在子元素，倒数第一层左右子节点都只有元素的长度，为了显示好看，横线在两者之间的间隔应该有元素字符串的长度 len(key)
+			length_between_slash =  max(left_total_width - left_num_pos + right_num_pos +1,len(key))
+
+			# 数字在的位置 :左子树数字在的位置+斜杠之间
+			num_pos= left_num_pos + length_between_slash // 2
+
+			# 由于初始化的时候line_total_width都是0，不能用左边的距离加上右边的距离
+			line_total_width= left_num_pos+length_between_slash+(right_total_width - right_num_pos)
+			
+			# 如果key的长度只有1，则不会替换
+			key = key.center(length_between_slash,'.')
+			# 由于斜线和点在同一列，会不美观
+			if key[0] == '.':key=' ' + key[1:]
+			if key[-1] == '.':key=key[:-1]+' '
+
+			parent_line = [' '*left_num_pos +key+' '*(right_total_width- right_num_pos)]
+			
+			#扣除斜杠占据的位置
+			slash_line_str = [' '*(left_num_pos)]
+			if node.left is not  None and node.right is  not None:
+				slash_line_str.append('/')
+				slash_line_str.append(' '*(length_between_slash-2))
+				slash_line_str.append('\\')
+			elif node.left is None and node.right is not None:
+				slash_line_str.append(' '*(length_between_slash-1))
+				slash_line_str.append('\\')
+			elif node.left is not None and node.right is None:
+				slash_line_str.append('/')
+				slash_line_str.append(' '*(length_between_slash-1))
+			else:
+				slash_line_str.append(' '*(length_between_slash))
+			slash_line_str.append(' '*(right_total_width- right_num_pos))
+			slash_line=[''.join(slash_line_str)]
+
+			while len(left_lines)<len(right_lines):
+				# 最上的一层肯定是最长的，下面的每一行保持和最长层的长度一致
+				left_lines.append(' '*left_total_width)
 			while len(right_lines) < len(left_lines):
-				right_lines.append(' ' * right_width)
-			if (middle - len(label)) % 2 == 1 and node.parent is not None and \
-				node is node.parent.left and len(label) < middle:
-				label += '.'
-			# center 返回指定宽度 width 居中的字符串,用 . 填充 如 label=1,label.center(10,'.')表示 ....1.....
-			label = label.center(middle, '.')
-			if label[0] == '.': label = ' ' + label[1:]
-			if label[-1] == '.': label = label[:-1] + ' '
-			# zip 合并两个list成为元组
-			lines = [' ' * left_pos + label + ' ' * (right_width - right_pos),
-                     ' ' * left_pos + '/' + ' ' * (middle-2) +
-                     '\\' + ' ' * (right_width - right_pos)] + \
-              [left_line + ' ' * (width - left_width - right_width) +
-               right_line
-               for left_line, right_line in zip(left_lines, right_lines)]
-			return lines, pos, width
-		return '\n'.join(recurse(self.root) [0])
+				right_lines.append(' '*right_total_width)
+			
+			child_line = [l+' '*(line_total_width-left_total_width-right_total_width)+r for l , r in zip(left_lines,right_lines)]
+			
+			value = parent_line+slash_line+child_line
+			return value, num_pos, line_total_width
+		# list拼接直接换行就行
+		return '\n'.join(recurse(self.root)[0])
 
 class Node(object):
 	"""docstring for Node"""
@@ -189,15 +219,15 @@ def test(bst):
 
 
 if __name__ == '__main__':
-	# bst = BST()
-	# for i in range(100):
-	# 	node = Node(random.randint(1,100))
-	# 	bst.insertDistinct(node)
+	bst = BST()
+	for i in range(80):
+		node = Node(random.randint(1,1000))
+		bst.insertDistinct(node)
 	# print("root",bst.root.key)
 	# bst.inorderTreeWalk(bst.root)
-	# print(bst)
+	print(bst)
 	label = "1"
-	print()
+	# print()
 
 
 
