@@ -8,7 +8,9 @@ class Node(object):
 
   # 树是单独的结构，BST用来操作BST树，确保BST的性质不会有改变
 class AvlBST(object):
-	"""左子树的值小于父子树的值小于等于右子树的值"""
+	"""左子树的值小于父子树的值小于等于右子树的值
+	最坏情况是：成为一条链
+	"""
 	def __init__(self):
 		self.root = None
 
@@ -25,10 +27,81 @@ class AvlBST(object):
 		if xParent == None:
 			self.root = node
 			return node
+		node.parent = xParent
 		if node.key<xParent.key:
 			xParent.left = node
 		else:
 			xParent.right = node
+		return node
+
+	def maximum(self,node = None):
+		startPosition = self.root if node is None else node
+		while startPosition is not None and startPosition.right is not None:
+			startPosition = startPosition.right
+		return startPosition
+	
+	def minimun(self,node = None):
+		startPosition = self.root if node is None else node
+		while startPosition is not None and startPosition.left is not None:
+			startPosition = startPosition.left 
+		return startPosition
+
+	def search(self,key):
+		node = self.root
+		while node is not None and node.key != key:
+			if key <node.key:
+				node = node.left
+			else:
+				node = node.right
+		return node
+
+
+	# 在没有重复的BST中,比key要大的最小的节点
+	def successor(self,key,node = None):
+		node = self.search(key) if node is None else node
+		if node is not None:
+			if node.right is not None:
+				return self.minimun(node.right)
+			nodeP = node.parent
+			while nodeP is not None and node != nodeP.left:
+				node = nodeP
+				nodeP=node.parent
+			return nodeP
+		return None
+
+	# ’_‘开头表示是内部实现 
+	def _translate(self,delete,replace):
+		deleteP = delete.parent
+		if deleteP == None:
+			self.root = replace 
+		elif delete == deleteP.left:
+			deleteP.left = replace
+		else:
+			deleteP.right = replace
+		if replace!=None:
+			replace.parent = deleteP
+		return delete
+	
+	#左子树和右子树都存在是时需要找后继节点，如果后继节点不是要删除节点的右节点，需要再删除一次
+	def delete(self,key,node=None):
+		node = self.search(key) if  node is None else node
+		if node is None:
+			return node
+		if node.right is None:
+			return self._translate(node,node.left)
+		elif node.left is None:
+			return self._translate(node,node.right)
+		else:
+			successor = self.minimun(node.right)
+			if successor != node.right:
+				self._translate(successor,successor.right)
+				successor.right = node.right
+				node.right.parent = successor
+			self._translate(node,successor)
+			node.left.parent = successor
+			successor.left = node.left
+			return successor
+
 
 	# 打印的方法
 	# 1:先序遍历
@@ -93,18 +166,175 @@ class AvlBST(object):
 		return '\n'.join(recurse(self.root)[0])
 
 class Avl(AvlBST):
-	"""左子树的值小于父子树的值小于右子树的值,同时每个左子树的高度与右子树的高度差值不大于1"""
-	def __init__(self, arg):
+	"""
+	高度平衡的二叉查找树
+	左子树的值小于父子树的值小于右子树的值,同时每个左子树的高度与右子树的高度差值不大于1
+		情况1:
+			1  
+			\  
+			 2 
+			  \ 
+			   3
+			左旋
+			2  
+			/\ 
+			1 3
+		情况2:
+			 3 
+			/  
+		   1  
+			\  
+			 2
+		   对1进行左旋
+		       3 
+			  / 
+		     2  
+			/  
+		   1
+		   再右旋
+		    2  
+			/\ 
+			1 3
+		情况3:
+			   3 
+			  / 
+			 2  
+			/  
+		   1 
+			右旋
+			2  
+			/\ 
+			1 3
+		情况4:
+			1  
+			 \ 
+			  3 
+			 / 
+			2
+			右旋：
+			1  
+			 \  
+			  2 
+			  \ 
+			   3
+			左旋:
+			2  
+			/\ 
+			1 3
+	"""
+	def __init__(self):
 		super(Avl, self).__init__()
-		self.arg = arg
+	def _height(self,node):
+		if node is None:
+			return -1
+		else:
+			return node.height
+
+	def _update_height(self,node):
+		node.height = max(self._height(node.left),self._height(node.right))+1
+
+	def insert(self,key):
+		node=super().insert(key)
+		self._reblance(node)
+	
+	def _reblance(self,node):
+		while node is not None:
+			self._update_height(node)
+			if self._height(node.left) - self._height(node.right) >=2:
+				nodeL = node.left 
+				if self._height(nodeL.left) < self._height(nodeL.right):
+					self._left_roate(nodeL)
+				self._right_roate(node)
+			elif self._height(node.right) - self._height(node.left) >=2:
+				nodeR = node.right 
+				if self._height(nodeR.left) > self._height(nodeR.right):
+					self._right_roate(nodeR)
+				self._left_roate(node)
+			node = node.parent
+ 
+	def _right_roate(self,node):
+		'''当前节点的左节点高度-右节点高度>=2
+		右旋表示左边节点高
+		'''
+		pivot=node.left		
+		pivot.parent = node.parent
+		if node == self.root:
+			self.root=pivot
+		else:
+			if node.parent.left is node:
+				pivot.parent.left = pivot
+			else:
+				pivot.parent.right = pivot
+		node.parent = pivot
+		tempNode = pivot.right 
+		pivot.right = node
+		node.left = tempNode
+		if tempNode is not None:
+			tempNode.parent = node
+		
+		self._update_height(pivot)
+		self._update_height(node)
+
+
+	def _left_roate(self,node):
+		'''当前节点的右节点高度-左节点高度>=2
+		从上到下，按照父子一对一对处理
+		'''
+		pivot = node.right
+		pivot.parent = node.parent 
+		if node == self.root:
+			self.root = pivot
+		else:
+			if node.parent.left is node:
+				pivot.parent.left = pivot
+			else:
+				pivot.parent.right = pivot
+		tempNode = pivot.left
+		pivot.left = node
+		node.parent = pivot
+		node.right = tempNode
+		if tempNode is not None:
+			tempNode.parent = node
+		self._update_height(pivot)
+		self._update_height(node)
+
+
+
+
+
+class AvlNode(Node):
+	def __init__(self,key,right=None,left=None,parent=None):
+		super(AvlNode,self).__init__()
+		self.height=0
 
 if __name__ == '__main__':
-	def test():
+	def testBST():
 		bst=AvlBST()
-		for x in range(1,40):
+		for x in range(1,60):
 			bst.insert(random.randint(1,1000))
+		val(bst.maximum(),"bst maximum:","empty bst")
+		val(bst.minimun(),"bst minimun:","empty bst")
+		bst.insert(23)
+		val(bst.search(23),"search result","key:"+str(23)+"not exist")
+		bst.insert(200)
+		bst.insert(210)
+		bst.insert(209)
+		bst.insert(202)
+		bst.insert(214)
+		bst.insert(216)
+		val(bst.successor(200),"successor is:","key:"+str(200)+"successor not exist")
+		val(bst.successor(216),"successor is:","key:"+str(216)+"successor not exist")
+		val(bst.delete(210),"delete is:","key:"+str(210)+" not exist")
 		print(bst)
-	test()
+	def val(node,msg,reason):
+		print(msg,node.key) if node is not None else print(reason)
+	
+	def testAVL():
+		avl = Avl()
+		for x in range(1,40):
+			avl.insert(random.randint(1,1000))
+		print(avl)
+	testAVL()
 
 
 

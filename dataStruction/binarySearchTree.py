@@ -91,8 +91,8 @@ class BST(object):
 			# 后继一定在node的右节点
 			return self.minimum(node.right)
 		y = node.parent
-		# 后继几点只能在右节点
-		while  y!=None and node != y.right:
+		# 后继节点只能在右节点
+		while  y!=None and node == y.right:
 			node = y
 			y=y.parent
 		return y
