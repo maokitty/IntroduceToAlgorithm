@@ -297,15 +297,8 @@ class Avl(AvlBST):
 			tempNode.parent = node
 		self._update_height(pivot)
 		self._update_height(node)
-
-
-
-
-
-class AvlNode(Node):
-	def __init__(self,key,right=None,left=None,parent=None):
-		super(AvlNode,self).__init__()
-		self.height=0
+    
+    # 删除需要重新旋转
 
 if __name__ == '__main__':
 	def testBST():
