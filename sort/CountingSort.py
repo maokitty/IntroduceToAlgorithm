@@ -1,6 +1,8 @@
 import sys
 class Counting(object):
-	"""docstring for Counting"""
+	"""docstring for Counting
+    核心思想:创建最大的数位数的一个数组，按照值在每一个数组上追加已有的顺序，再依次取出即可
+	"""
 	def __init__(self,toSortFile,maxValue):
 		super(Counting, self).__init__()
 		try:

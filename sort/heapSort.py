@@ -86,7 +86,7 @@ class HeapSort(object):
 
 if __name__ == '__main__':
 	import profile
-	largeSize = True
+	largeSize = False
 	if len(sys.argv) == 2:
 		tsf = sys.argv[1]
 	elif largeSize:
