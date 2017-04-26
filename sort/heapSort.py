@@ -1,6 +1,10 @@
 import sys
 class HeapSort(object):
-	"""docstring for HeapSort"""
+	"""核心思想:
+	构建堆
+		维持堆的特性，以最大堆来讲,左右子节点都要比父节点要小，所以先找到当前节点的子节点最大的下标，如果当前节点不是最大的，则交换
+		，对交换过的节点再次循环以防堆结构被破坏【被替换节点数】
+	"""
 	def __init__(self, toSortFile):
 		super(HeapSort, self).__init__()
 		self.tsf = toSortFile
