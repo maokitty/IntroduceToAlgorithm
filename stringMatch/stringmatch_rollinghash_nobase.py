@@ -1,6 +1,11 @@
 class RollingHash(object):
 	"""
 	去掉 stringmatch_rollinghash中的base
+	这样做的缺点是:比如字串 abcd 和 bdca,没有base回导致hash值一致，从而hash冲突
+	另外，假设基数是 2^p ,mod = 2^p-1由于 
+		x * (2^p)^n mod (2^p - 1) = x (2^p)^(n-1) * (2^p mod (2^p-1)) mod (2^p - 1) 
+								  = x (2^p)^(n-1) mod (2^p - 1) 
+								  = x
 	"""
 	def __init__(self,s):
 		self.prime = 499999

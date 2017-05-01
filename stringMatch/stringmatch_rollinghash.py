@@ -12,6 +12,8 @@ class RollingHash(object):
       =[(n(0) mode p)*base -old *(base^(k) mod p) +new ] mod p  //对同行一个数求两次余数不会改变结果
     使magic = base(k) mod p 而 h1 = n(0) mod p
     h2= [h1*base -old*magic +new ]mod p
+
+    此处的base 并不是指 所有的数字都是10进制，而是在某一位上乘以一个特定的数他可以看做一个 基数
 	"""
 	def __init__(self,s):
 		self.base = 7
