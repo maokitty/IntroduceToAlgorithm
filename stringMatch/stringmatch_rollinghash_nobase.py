@@ -6,6 +6,7 @@ class RollingHash(object):
 		x * (2^p)^n mod (2^p - 1) = x (2^p)^(n-1) * (2^p mod (2^p-1)) mod (2^p - 1) 
 								  = x (2^p)^(n-1) mod (2^p - 1) 
 								  = x
+		相当于直接相加，没有产生作用
 	"""
 	def __init__(self,s):
 		self.prime = 499999
