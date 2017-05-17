@@ -44,8 +44,6 @@ class MinHeap(object):
 		return ",".join(r)
 
 class MaxHeap(object):
-	"""priorityQueue修改下
-	"""
 	def __init__(self):
 		self.data=[]
 		self.__size=0
