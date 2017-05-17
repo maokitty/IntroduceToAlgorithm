@@ -68,9 +68,13 @@ class PriorityQueue(object):
 	def maxHeapInsert(self,data,key):
 		self.heapSize += 1
 		data.append(float('-inf'))
-		self.heapIncreaseKey(data,self.heapSize,key)	
+		self.heapIncreaseKey(data,self.heapSize,key)
+	def __str__(self):
+		r=[]
+		for i in range(len(self.data)):
+			r.append(str(self.data[i]))
+		return ",".join(r)
 
-		
 	def heapMaximum(self,data):
 		return data[0]
 
@@ -82,10 +86,17 @@ if __name__ == '__main__':
 		f="txtFile/sortData_5.txt"
 	pq=PriorityQueue(f)
 	print(pq.heapMaximum(pq.data))
-	pq.heapIncreaseKey(pq.data,4,200)
-	print(pq.data)
+	# pq.heapIncreaseKey(pq.data,4,200)
+	print(pq)
 	pq.maxHeapInsert(pq.data,150)
-	print(pq.data)
+	print(pq)
+	for i in range(len(pq.data)-1,0,-1):
+		temp=pq.data[0]
+		pq.data[0]=pq.data[i]
+		pq.data[i]=temp
+		pq.heapSize=i-1
+		pq.maxHeapify(pq.data,0)
+	print(pq)
 
 
 
