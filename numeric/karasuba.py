@@ -1,4 +1,5 @@
 #toom-k https://everything2.com/index.pl?node=Toom-Cook+multiplication&lastnode_id=346167&searchy.x=38&searchy.y=7
+#伪代码来自wikipage
 def karatsuba(num1, num2):
     if (num1 < 10) or (num2 < 10):
 	return num1*num2

@@ -1,5 +1,6 @@
 import math
 class BigInteger(object):
+	"""计算500位的精度就有点慢了。。。"""
 	def __init__(self,val,sign=0):
 		"""使用十进制"""
 		self.value=[]
@@ -10,10 +11,6 @@ class BigInteger(object):
 				continue
 			self.value.append(int(val[i]))
 		
-#	def pow10(self,power):
-#		i=power
-#		while(i>0):
-#			self.value.append("0")
 #			i-=1
 	def multiTo(self,a):
 		valueStr="".join(self.value)
@@ -42,6 +39,40 @@ class BigInteger(object):
 					return sV ,sLen, self.value, lLen
 			return sV ,sLen, self.value, lLen
 	
+	def compare(self,a):
+		aSign=a.getSign()
+		if self.sign>aSign:
+			return 1
+		elif aSign>self.sign:
+			return -1
+		else:
+			result = 1
+			aV=a.getValue()
+			if len(self.value) > len(aV):
+				if self.sign ==0:
+					return 1
+				else:
+					return -1
+			elif len(self.value) < len(aV):
+				if self.sign ==0:
+					return -1
+				else:
+					return 1
+			else:
+				for i in range(len(self.value)):
+					if self.value[i]>aV[i]:
+						if self.sign ==0:
+							return 1
+						else:
+							return -1
+					if self.value[i]<aV[i]:
+						if self.sign ==0:
+							return -1
+						else:
+							return 1
+				return 0
+						
+
 	def absCompare(self,a):
 		aV=a.getValue()
 		vLen=len(self.value)
@@ -58,7 +89,15 @@ class BigInteger(object):
 					return -1
 		return 0
 
-	def mod(self,a,precision=0):
+	def div(self,a,precision=0):
+		if precision==0:
+			quotient,remainder = self.mod(a)
+			return quotient
+		temp = self.mul_ten_power(ten.pow_ten(precision))
+		quotient ,remainder=temp.mod(a)
+		return quotient
+
+	def mod(self,a):
 		sV=self.value
 		vLen=len(sV)
 		aV=a.getValue()
@@ -98,7 +137,6 @@ class BigInteger(object):
 					remainder=dividend.sub(temp)
 					if remainder.getSign()<0:
 						j-=1
-						#temp=divisor.mul(BigInteger([j]))
 						temp=temp.sub(divisor)
 						remainder=dividend.sub(temp)
 					if remainder.absCompare(a)>=0:
@@ -263,11 +301,33 @@ class BigInteger(object):
 		if self.sign+a.getSign() == -2:
 			return BigInteger(result,-1)
 		return BigInteger(result)
-
-		
-			
-
-#	def __karasuba(self,x,y):
+	
+	def pow_ten(self,n):
+		"""10的n次方"""
+		r=[1]
+		if len(self.value) >0 and self.value[0]!=0:
+			while n>0:
+				r.append(0)
+				n-=1
+		return BigInteger(r)
+	def ten_power_pow(self,n):
+		"""当前数乘10的幂次方的n次方"""
+		r=[i for i in self.value]
+		if len(self.value) > 0 and self.value[0]!=0:
+			while n>1:
+				z=[0]*len(self.value)
+				r +=z
+				n-=1
+		return BigInteger(r)
+	
+	def mul_ten_power(self,n):
+		"""当前数字乘以10的n次方"""
+		if n<1:
+			return self
+		r=[i for i in self.value]
+		z=[0]*n
+		r +=z
+		return BigInteger(r)
 		
 	def __str__(self):
 		r=[]
@@ -284,44 +344,38 @@ class Catalan(object):
     AD=(AC-CD)=(AC-根号下(BC^2-BD^2))
     http://people.csail.mit.edu/devadas/numerics_demo/chord.html
 	"""
-	def __init__(self,radius,side,digit):
+	ten = BigInteger("10")
+	two=BigInteger("2")
+	def __init__(self,guessValue,initvalue,precision):
 		super(Catalan, self).__init__()
-		self.radius = radius
-		self.side = side
-		self.digit = digit
+		self.rn=initvalue
+		self.x=BigInteger(guessValue)
+		self.precision=precision
+		self.multiplier=Catalan.ten.pow_ten(precision)
+		self.multiplier_square=self.multiplier.ten_power_pow(2)
+		self.scaledn=self.rn.mul(self.multiplier)
+	def fx(self,precision):
+		return self.x.mul(self.x.sub(self.scaledn)).add(self.multiplier_square)
 
-	def catalanMagic(self):
-		a=self.radius**2-self.side**2
-		a=2
-		x=self.initGuess(a)
-		ntVal=self.newtonMethod(x,a,self.digit)
-		val = self.radius-ntVal
-		print("val",val)
-	
-	def initGuess(self,a):
-		value=2
-		while (value**2)<a:
-			value=value**2
-		return value
-	def newtonMethod(self,x,a,digit):
-		d=0
-		while d<digit:
-			xNext=self.nextValue(x,a,digit)
-			x=xNext
-			d=d+2
-			print("xNext",xNext)
-		return x
-
-	def nextValue(self,b,a,digit):
-		yd=0
-		R=10**digit
-		y=1
-		while yd<digit:
-			yNext = 2*y-(b/R)*(y**2)
-			y=yNext
-			yd=yd+2
-		return 0.5*(b+a*yd)
-
+	def dfx(self,precision):
+		return self.x.mul(Catalan.two).sub(self.scaledn)
+		
+	def newtonMethod(self):
+		while True:
+			fatx=self.fx(self.precision)
+			dfatx=self.dfx(self.precision)
+			xn=self.x.sub(fatx.div(dfatx))
+			if xn.compare(self.x)==0:
+				break
+			self.x=xn
+	def __str__(self):
+		r=["0."]
+		while  self.precision - (len(self.x.getValue())+len(r))+2>0:
+			r.append("0")
+		xV=self.x.getValue()
+		for i in range(len(xV)):
+			r.append(str(xV[i]))
+		return "".join(r)
 
 def addWithCarry():
 	x=BigInteger("12345")
@@ -397,16 +451,23 @@ def mod():
 	x=BigInteger("2")
 	q,r=x.mod(y)
 	print("2/3=",q,r)
+	x=BigInteger("-3")
+	y=BigInteger("-3")
+	q,r=x.mod(y)
+	print("-3/-3=",q,r)
+def generate():
+	ten=BigInteger("10")
+	ct = Catalan("1",ten.pow_ten(12),200)
+	ct.newtonMethod()
+	print(ct)
 
-
-	
-	
-
-if  __name__ == '__main__':
+if  '__main__':
 	#addWithCarry()
 	#addOverFlow()
 	#subWithCarry()
 	#addMinus()
 	#subMinus()
 	#mul()
-	mod()
+	#mod()
+	generate()
+
