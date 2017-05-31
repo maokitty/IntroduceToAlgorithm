@@ -1,6 +1,6 @@
 import math
 class BigInteger(object):
-	"""计算500位的精度就有点慢了。。。"""
+	"""计算500位的精度就有点慢了。。。，主要耗时在 extend/append 和乘法 使用karasuba大概可以快10s"""
 	def __init__(self,val,sign=0):
 		"""使用十进制"""
 		self.value=[]
@@ -9,12 +9,8 @@ class BigInteger(object):
 			if i==0 and val[i] == "-" :
 				self.sign =-1 # -1代表是负数
 				continue
-			self.value.append(int(val[i]))
+			self.value.extend([int(val[i])])
 		
-#			i-=1
-	def multiTo(self,a):
-		valueStr="".join(self.value)
-		aStr=str(a)
 	def length(self):
 		return len(self.value)
 	def getValue(self):
@@ -115,9 +111,9 @@ class BigInteger(object):
 			if remainder.getSign()<0:
 				i+=1
 				if i<vLen:
-					dividend.getValue().append(sV[i])
+					dividend.getValue().extend([sV[i]])
 				if len(quotient)!=0:
-					quotient.append(q)
+					quotient.extend([q])
 				continue
 			q +=1
 			if remainder.absCompare(divisor)>=0:
@@ -147,18 +143,18 @@ class BigInteger(object):
 			i+=1
 			rV=remainder.getValue()
 			if i<vLen:
-				rV.append(sV[i])
-			quotient.append(q)
+				rV.extend([sV[i]])
+			quotient.extend([q])
 			if len(rV)>1 and rV[0]==0:
 				j=1
-				while rV[j] ==0 and j<vLen:
+				while j<len(rV) and rV[j] ==0 :
 					j+=1
 				if j==vLen:
 					remainder=BigInteger([0])
 				else:
 					rTemp=[]
 					for k in range(j,len(rV)):
-						rTemp.append(rV[k])
+						rTemp.extend([rV[k]])
 					remainder=BigInteger(rTemp)
 			dividend=remainder
 
@@ -168,17 +164,10 @@ class BigInteger(object):
 			remainder.sign=-1
 			return BigInteger(quotient,-1),remainder
 		return BigInteger(quotient),remainder
-
-
-
-	def mul10(self,n):
-		val=self.value
-		while n>0:
-			val.append(0)
-			n-=1
-		return BigInteger(val,self.sign)
 			
 	def mul(self,a):
+		if len(a.getValue())>40 and len(self.value)>40:
+			return self.karasuba_mul(a)
 		result=[]
 		aV=a.getValue()
 		lV=self.getValue()
@@ -195,7 +184,7 @@ class BigInteger(object):
 				b.insert(0,carry % 10)
 				carry=carry // 10
 			while lVLen-i>1:
-				b.append(0)
+				b.extend([0])
 				i+=1
 			if len(result)<len(b):
 				temp=result
@@ -296,7 +285,7 @@ class BigInteger(object):
 		if carry !=0:
 			r=[1]
 			for i in range(1,len(result)+1):
-				r.append(result[i-1])
+				r.extend([result[i-1]])
 			result=r
 		if self.sign+a.getSign() == -2:
 			return BigInteger(result,-1)
@@ -305,30 +294,51 @@ class BigInteger(object):
 	def pow_ten(self,n):
 		"""10的n次方"""
 		r=[1]
-		if len(self.value) >0 and self.value[0]!=0:
-			while n>0:
-				r.append(0)
-				n-=1
-		return BigInteger(r)
-	def ten_power_pow(self,n):
-		"""当前数乘10的幂次方的n次方"""
-		r=[i for i in self.value]
-		if len(self.value) > 0 and self.value[0]!=0:
-			while n>1:
-				z=[0]*len(self.value)
-				r +=z
-				n-=1
-		return BigInteger(r)
+		r+=[0]*n
+		return BigInteger(r,self.sign)
+	def ten_power_pow(self,n,m):
+		"""10的n次方的m次方"""
+		r=[1]
+		r+=[0]*n*m
+		return BigInteger(r,self.sign)
 	
 	def mul_ten_power(self,n):
 		"""当前数字乘以10的n次方"""
+		r=[i for i in self.value]
+		if isinstance(n,BigInteger):
+			nV=n.getValue()
+			r+=[nV[i] for i in range(1,len(nV))]
+			return BigInteger(r,self.sign)
 		if n<1:
 			return self
-		r=[i for i in self.value]
-		z=[0]*n
-		r +=z
-		return BigInteger(r)
-		
+		r+=[0]*n
+		return BigInteger(r,self.sign)
+	def __trustedStripLeadingZeroInts(self,a):
+		j=0
+		for i in a:
+			if i!=0:
+				break
+			j+=1
+		if j<len(a):
+			return a[j:]
+		return [0]
+	def karasuba_mul(self,a):
+		aV=a.getValue()
+		sV=self.getValue()
+		maxLength=max(len(aV),len(sV))
+		sP=maxLength//2
+		h1,l1=BigInteger(self.__trustedStripLeadingZeroInts(sV[:-sP])),BigInteger(self.__trustedStripLeadingZeroInts(sV[-sP:]))
+		h2,l2=BigInteger(self.__trustedStripLeadingZeroInts(aV[:-sP])),BigInteger(self.__trustedStripLeadingZeroInts(aV[-sP:]))
+		z0=l1.mul(l2)
+		z1=l1.add(h1).mul(l2.add(h2))
+		z2=h1.mul(h2)
+		result=z2.mul_ten_power(self.pow_ten(2*sP)).add(z1.sub(z2).sub(z0).mul_ten_power(self.pow_ten(sP))).add(z0)
+		if a.getSign()!=self.sign:
+			result.sign=-1
+		else:
+			result.sign=0
+		return result
+	
 	def __str__(self):
 		r=[]
 		if self.sign==-1:
@@ -352,12 +362,17 @@ class Catalan(object):
 		self.x=BigInteger(guessValue)
 		self.precision=precision
 		self.multiplier=Catalan.ten.pow_ten(precision)
-		self.multiplier_square=self.multiplier.ten_power_pow(2)
+		self.multiplier_square=Catalan.ten.pow_ten(2*precision)
 		self.scaledn=self.rn.mul(self.multiplier)
 	def fx(self,precision):
+		fxa=self.x.sub(self.scaledn)
+		fxb=self.x.mul(fxa)
+		fxc=fxb.add(self.multiplier)
 		return self.x.mul(self.x.sub(self.scaledn)).add(self.multiplier_square)
 
 	def dfx(self,precision):
+		dfxa=self.x.mul(Catalan.two)
+		dfxb=dfxa.sub(self.scaledn)
 		return self.x.mul(Catalan.two).sub(self.scaledn)
 		
 	def newtonMethod(self):
@@ -410,7 +425,7 @@ def subMinus():
 	w=BigInteger("-11")
 	print("(-11)-(-9)=",w.sub(y))
 def mul():
-	x=BigInteger("99")
+	x=BigInteger("0")
 	y=BigInteger("-9")
 	print("99*(-9)=",x.mul(y))
 	print("(-9)*99=",y.mul(x))
@@ -457,10 +472,19 @@ def mod():
 	print("-3/-3=",q,r)
 def generate():
 	ten=BigInteger("10")
-	ct = Catalan("1",ten.pow_ten(12),200)
+	ct = Catalan("1",ten.pow_ten(12),500)
 	ct.newtonMethod()
 	print(ct)
-
+def karasuba():
+	x=BigInteger("123912837981273982749827598327498732984723894782374983274982374982374987329847328974893274892374987238947239847892374982374827389472389473289472398474298472389478237498327498237498229847238947823749832749823749822984723894782374983274982374982298472389478237498327498237498229847238947823749832749823749822984723894782374983274982374982298472389478237498327498237498229847238947823749832749823749821928739843578923749703928409382094809384209840923840928304982309482039840912398792387894375843658437658743657843658743658736487519287398435789237497039284093820948093842098409238409283049823094820398409123987923878943758436584376587436578436587436587364875192873984357892374970392840938209480938420984092384092830498230948203984091239879238789437584365843765874365784365874365873648755679873298372498327498237489723492837493822759438759873498739879837258973498257892735897238947982374892374987238947239847398")
+	y=BigInteger("192873984357892374970392840938209480938420984092384092830498230948203984091239879238789437584365843765874365784365874365871928739843578923749703928409382094809384209840923840928304982309482039840912398792387894375843658437658743657843658743658736487519287398435789237497039284093820948093842098409238409283049823094820398409123987923878943758436584376587436578436587436587364875192873984357892374970392840938209480938420984092384092830498230948203984091239879238789437584365843765874365784365874365873648751928739843578923749703928409382094809384209840923840928304982309482039840912398792387894375843658437658743657843658743658736487519287398435789237497039284093820948093842098409238409283049823094820398409123987923878943758436584376587436578436587436587364875364875")
+	print(x.mul(y))
+	print("$$$$")
+	print(x.karasuba_mul(y))
+def mulTenP():
+	x=BigInteger("-99999999999999999999999900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000")
+	y=BigInteger("100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000")
+	print(x.mul(y))
 if  '__main__':
 	#addWithCarry()
 	#addOverFlow()
@@ -469,5 +493,8 @@ if  '__main__':
 	#subMinus()
 	#mul()
 	#mod()
-	generate()
+	import profile
+	profile.run("generate()")
+	#karasuba()
+	#mulTenP()
 
